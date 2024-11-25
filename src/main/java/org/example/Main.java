@@ -2,50 +2,46 @@ package org.example;
 
 import org.example.models.MonitorP;
 import org.example.threads.Comensal;
-public class Main {
-
+import org.example.threads.Mesero;
+import  org.example.entity.Mesa;
+public class Main{
     public static void main(String[] args) {
-        MonitorP monitorP = new MonitorP(4);
+        // Crear el monitor de las mesas
+        MonitorP monitorMesas = new MonitorP(4); // Restaurante con 4 mesas
 
+        // Crear y lanzar los hilos de los meseros
+        Mesero mesero1 = new Mesero(monitorMesas, "Mesero 1");
+        Mesero mesero2 = new Mesero(monitorMesas, "Mesero 2");
 
+        mesero1.start();
+        mesero2.start();
 
+        // Hilo para simular llegada infinita de comensales
+        new Thread(() -> {
+            try {
+                int comensalId = 1; // Identificador de comensales
+                while (true) {
+                    Mesa mesa = monitorMesas.asignarMesa(); // Ocupar una mesa
+                    System.out.println("Comensal " + comensalId + " ocupa " + mesa);
 
-        Thread comensales = new Thread(() -> {
-            int comensalesCount = 1; // Contador de comensales
-            while (true) {
-                try {
-                    monitorP.ocuparMesa(); // Comensal intenta ocupar una mesa
-                    System.out.println("Comensal " + comensalesCount + " llegó al restaurante.");
-                    comensalesCount++; // Incrementar el contador de comensales
-                    Thread.sleep(1000); // Simula tiempo entre llegadas
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Simular que el comensal usa la mesa por un tiempo aleatorio
+                    int finalComensalId = comensalId;
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep((int) (3000 + Math.random() * 2000)); // 3-5 segundos
+                            monitorMesas.liberarMesa(mesa.getNumero()); // Liberar la mesa
+                            System.out.println("Comensal " + finalComensalId + " ha dejado " + mesa);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+
+                    comensalId++; // Incrementar el identificador para el próximo comensal
+                    Thread.sleep(1000); // Simular llegada de nuevos comensales cada 1 segundo
                 }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        });
-
-        // Hilo para liberar mesas periódicamente
-        Thread liberarMesas = new Thread(() -> {
-            int liberacionCount = 1; // Contador de mesas a liberar
-            while (true) {
-                try {
-                    Thread.sleep(5000); // Simula el tiempo que los comensales están ocupando la mesa
-                    monitorP.liberarMesa((liberacionCount % 4) + 1); // Liberar una mesa cíclicamente
-                    liberacionCount++; // Incrementar el contador de liberación de mesas
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        comensales.start(); // Iniciar el hilo de comensales
-        liberarMesas.start(); // Iniciar el hilo de liberar mesas
+        }).start();
     }
 }
-
-
-
-
-
-
-
