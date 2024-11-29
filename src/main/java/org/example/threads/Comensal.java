@@ -1,31 +1,33 @@
 package org.example.threads;
-import org.example.entity.Mesa;
+
+import org.example.models.MonitorCocina;
 import org.example.models.MonitorP;
+
 public class Comensal extends Thread {
     private MonitorP monitorMesas;
-    private int idComensal;
+    private MonitorCocina monitorCocina;
 
-    public Comensal(MonitorP monitorMesas, int idComensal) {
+    public Comensal(MonitorP monitorMesas, MonitorCocina monitorCocina, String name) {
+        super(name);
         this.monitorMesas = monitorMesas;
-        this.idComensal = idComensal;
+        this.monitorCocina = monitorCocina;
     }
 
     @Override
     public void run() {
         try {
-            // El comensal intenta ocupar una mesa
-            Mesa mesa = monitorMesas.asignarMesa();
-            System.out.println("Comensal " + idComensal + " ocupa " + mesa);
+            // Intentar ocupar una mesa
+            var mesa = monitorMesas.asignarMesa();
+            System.out.println(getName() + " ocupa " + mesa);
 
-            // Simular que el comensal está comiendo (por un tiempo aleatorio)
-            Thread.sleep((int) (3000 + Math.random() * 2000)); // 3-5 segundos comiendo
+            // Simular tiempo comiendo
+            Thread.sleep((long) (Math.random() * 5000 + 2000));
 
-            // Después de comer, libera la mesa
+            // Liberar la mesa después de comer
             monitorMesas.liberarMesa(mesa.getNumero());
-            System.out.println("Comensal " + idComensal + " ha dejado " + mesa);
-
+            System.out.println(getName() + " terminó y liberó " + mesa);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println(getName() + " fue interrumpido: " + e.getMessage());
         }
     }
 }

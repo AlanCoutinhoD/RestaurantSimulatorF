@@ -1,37 +1,46 @@
 package org.example.threads;
-import org.example.models.MonitorCocina;
-import  org.example.models.MonitorP;
-import  org.example.entity.Orden;
-import  org.example.entity.Mesa;
-public class Mesero extends Thread {
-    private final MonitorP monitorMesas;
 
-    public Mesero(MonitorP monitorMesas, String nombre) {
-        super(nombre); // Configurar el nombre del thread
+import org.example.entity.Orden;
+import org.example.models.MonitorCocina;
+import org.example.models.MonitorP;
+
+public class Mesero extends Thread {
+    private MonitorP monitorMesas;
+    private MonitorCocina monitorCocina;
+
+    public Mesero(MonitorP monitorMesas, MonitorCocina monitorCocina, String name) {
+        super(name);
         this.monitorMesas = monitorMesas;
+        this.monitorCocina = monitorCocina;
     }
 
     @Override
     public void run() {
-        try {
-            while (true) {
-                // Obtener una mesa que necesita atención
-                Mesa mesa = monitorMesas.obtenerMesaSinAtender();
+        while (true) {
+            try {
+                // Buscar una mesa ocupada pero no atendida
+                System.out.println(getName() + ": Buscando una mesa ocupada pero no atendida...");
+                var mesa = monitorMesas.obtenerMesaSinAtender();
 
-                // Atender la mesa
-                System.out.println(getName() + " está atendiendo a la mesa " + mesa.getNumero());
-                Thread.sleep(2000); // Simular el tiempo que tarda en atender al cliente
+                if (mesa != null) {
+                    System.out.println(getName() + ": Atendiendo a la mesa " + mesa.getNumero());
 
-                // Marcar la mesa como atendida
-                monitorMesas.atenderMesa(mesa.getNumero());
-                System.out.println(getName() + " ha terminado de atender a la mesa " + mesa.getNumero());
+                    // Generar una orden para la cocina
+                    Orden orden = new Orden(mesa.getNumero());
+                    System.out.println(getName() + ": Generando la orden para la mesa " + mesa.getNumero());
+                    monitorCocina.tomarOrden(orden);
 
-                // Simular un breve descanso del mesero
-                Thread.sleep(1000);
+                    // Marcar la mesa como atendida
+                    monitorMesas.atenderMesa(mesa.getNumero());
+                    System.out.println(getName() + ": Mesa " + mesa.getNumero() + " ha sido marcada como atendida.");
+                } else {
+                    System.out.println(getName() + ": No hay mesas para atender en este momento.");
+                }
+
+                Thread.sleep(500); // Simular tiempo de atención
+            } catch (InterruptedException e) {
+                System.out.println(getName() + " fue interrumpido: " + e.getMessage());
             }
-        } catch (InterruptedException e) {
-            System.out.println(getName() + " ha sido interrumpido.");
         }
     }
 }
-
